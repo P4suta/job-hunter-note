@@ -42,6 +42,7 @@ make store-capture DEVICE="$SIMULATOR_ID" PROFILE=ipad
 The [product page header](artwork/ja/product-page-header.png) shows the calendar and the [search result](artwork/ja/search-results.png) highlights submission history.
 Both compositions use the safe areas from Apple's [creative asset templates](https://developer.apple.com/app-store/asset-best-practices/).
 Render the editable [drawing](../Scripts/RenderStoreArtwork.swift) with `xcrun swift Scripts/RenderStoreArtwork.swift`.
+Install Japanese text recognition with `brew install tesseract-lang` for the store media checks.
 Run `make metadata` to check the opaque exports, upright Japanese text, both split-view columns, and screenshot dimensions.
 
 ## Archive

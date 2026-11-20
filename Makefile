@@ -8,7 +8,7 @@ ARCHIVED_APP = $(ARCHIVE_PATH)/Products/Applications/JobHunterNote.app
 ASC = mise x github:rorkai/App-Store-Connect-CLI@6.6.1 -- asc
 SCREENSHOTS_DIR ?= store/screenshots/ja
 
-.PHONY: check lint unit simulator tsan mutation archive metadata store-capture
+.PHONY: check lint unit simulator tsan mutation archive metadata store-media store-capture
 check: lint unit simulator
 
 lint:
@@ -51,8 +51,11 @@ archive:
 	xcrun dwarfdump --uuid "$(ARCHIVED_APP)/JobHunterNote"
 	$(if $(DEVELOPMENT_TEAM),codesign --verify --strict "$(ARCHIVED_APP)")
 
-metadata:
+store-media:
 	xcrun swift Scripts/VerifyStoreMedia.swift --screenshots-dir "$(SCREENSHOTS_DIR)"
+	bash Scripts/test-store-media.sh "$(SCREENSHOTS_DIR)/ipad/02-deadline-detail.png"
+
+metadata: store-media
 	$(ASC) metadata validate --dir store/metadata
 	$(ASC) screenshots validate --path "$(SCREENSHOTS_DIR)/iphone" --device-type IPHONE_61
 	$(ASC) screenshots validate --path "$(SCREENSHOTS_DIR)/iphone-large" --device-type IPHONE_69

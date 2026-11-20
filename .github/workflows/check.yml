@@ -53,4 +53,6 @@ jobs:
       - name: Build the release archive
         run: make archive
       - name: Verify store screenshots and creative artwork
-        run: xcrun swift Scripts/VerifyStoreMedia.swift
+        run: |
+          brew install tesseract-lang
+          make store-media

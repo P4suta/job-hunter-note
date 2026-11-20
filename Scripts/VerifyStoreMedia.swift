@@ -1,6 +1,6 @@
+import CoreGraphics
 import Foundation
 import ImageIO
-import Vision
 
 struct MediaError: Error, CustomStringConvertible {
   let description: String
@@ -58,25 +58,60 @@ struct StoreImage {
       guard !hasBlackDisplayEdge() else { throw MediaError("\(name): black display edge") }
       region = image
     }
-    let request = VNRecognizeTextRequest()
-    request.recognitionLevel = .accurate
-    request.recognitionLanguages = ["ja-JP", "en-US"]
-    try VNImageRequestHandler(cgImage: region, orientation: .up).perform([request])
-    let words = (request.results ?? []).compactMap { observation -> (CGFloat, String)? in
-      let dx = abs(observation.topRight.x - observation.topLeft.x) * CGFloat(region.width)
-      let dy = abs(observation.topRight.y - observation.topLeft.y) * CGFloat(region.height)
-      guard dx > 4 * dy else { return nil }
-      guard let value = observation.topCandidates(1).first?.string else { return nil }
-      return (observation.boundingBox.midX, value.filter { !$0.isWhitespace })
-    }
-    var problems: [String] = []
-    for (region, phrases) in groups {
-      let text = words.filter { region.contains($0.0) }.map(\.1).joined(separator: " ")
+    for (columns, phrases) in groups {
+      let width = CGFloat(region.width)
+      let rectangle = CGRect(
+        x: columns.lowerBound * width, y: 0,
+        width: (columns.upperBound - columns.lowerBound) * width,
+        height: CGFloat(region.height))
+      guard let column = region.cropping(to: rectangle.integral) else {
+        throw MediaError("Invalid text region in \(name)")
+      }
+      var text = try recognizeHorizontalText(column)
       if !phrases.allSatisfy({ text.contains($0) }) {
-        problems.append("missing upright \(phrases) in \(region); found \(text)")
+        let reduced = CGContext(
+          data: nil, width: max(1, column.width / 2), height: max(1, column.height / 2),
+          bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: 0)!
+        reduced.interpolationQuality = .high
+        reduced.draw(column, in: CGRect(x: 0, y: 0, width: reduced.width, height: reduced.height))
+        text += "\n" + (try recognizeHorizontalText(reduced.makeImage()!))
+      }
+      let missing = phrases.filter { !text.contains($0) }
+      if !missing.isEmpty {
+        throw MediaError("\(name): missing upright \(missing) in \(columns); found \(text)")
       }
     }
-    guard problems.isEmpty else { throw MediaError("\(name): " + problems.joined(separator: "; ")) }
+  }
+
+  private func recognizeHorizontalText(_ region: CGImage) throws -> String {
+    let input = FileManager.default.temporaryDirectory.appendingPathComponent(
+      UUID().uuidString + ".png")
+    defer { try? FileManager.default.removeItem(at: input) }
+    guard
+      let destination = CGImageDestinationCreateWithURL(
+        input as CFURL, "public.png" as CFString, 1, nil)
+    else {
+      throw MediaError("Cannot prepare text recognition in \(name)")
+    }
+    CGImageDestinationAddImage(destination, region, nil)
+    guard CGImageDestinationFinalize(destination) else {
+      throw MediaError("Cannot export text region in \(name)")
+    }
+    let output = Pipe()
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+    process.arguments = [
+      "tesseract", input.path, "stdout", "-l", "jpn", "--psm", "11", "--dpi", "300",
+    ]
+    process.standardOutput = output
+    try process.run()
+    let data = output.fileHandleForReading.readDataToEndOfFile()
+    process.waitUntilExit()
+    guard process.terminationStatus == 0 else {
+      throw MediaError(
+        "Japanese text recognition failed for \(name) with status \(process.terminationStatus).")
+    }
+    return String(decoding: data, as: UTF8.self).filter { !$0.isWhitespace }
   }
 }
 
@@ -85,7 +120,7 @@ let deadlineColumns: [(ClosedRange<CGFloat>, [String])] = [
   (0...0.30, ["適性検査"]), (0.22...1, ["一次面接", "締切日", "前夜の通知"]),
 ]
 let employerColumns: [(ClosedRange<CGFloat>, [String])] = [
-  (0...0.36, ["応募先", "面接"]), (0.22...1, ["提出履歴", "履歴書の提出"]),
+  (0...0.36, ["応募先", "汐見工房", "適性検査"]), (0.22...1, ["提出履歴", "履歴書の提出"]),
 ]
 
 do {
@@ -139,7 +174,7 @@ do {
     ] {
       let artwork = try StoreImage("store/artwork/ja/" + file + ".png")
       try artwork.checkSize(3840, height)
-      try artwork.checkContent([(anywhere, ["応募記録", "一次面接"])], crop: crop)
+      try artwork.checkContent([(anywhere, ["応募記録", "12月", "面接"])], crop: crop)
     }
     print("Verified nine upright screenshots and both creative placements.")
   }
