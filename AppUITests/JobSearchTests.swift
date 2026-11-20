@@ -71,6 +71,26 @@ final class JobSearchTests: XCTestCase {
     XCTAssertEqual(XCTWaiter.wait(for: [off], timeout: 10), .completed)
   }
 
+  func testJournalActionsUseNavigationBarsAndChoicesStayInTheEditor() {
+    configure()
+    app.launch()
+    XCTAssertTrue(app.navigationBars.buttons["addDeadline"].waitForExistence(timeout: 5))
+    tap("startExample")
+    let exampleBar = app.navigationBars.containing(.button, identifier: "exitExample")
+    let add = exampleBar.buttons["addDeadline"].firstMatch
+    XCTAssertTrue(add.waitForExistence(timeout: 5))
+    XCTAssertTrue(add.isHittable, "Add belongs to the deadline navigation bar.")
+    add.tap()
+    tap("chooseCompany")
+    XCTAssertFalse(app.navigationBars["企業を選択"].exists)
+    tap("existing.B社")
+    XCTAssertEqual(control("companyField").value as? String, "B社")
+    tap("cancelEditor")
+    tap("task.適性検査")
+    XCTAssertTrue(app.navigationBars.buttons["editDeadline"].isHittable)
+    XCTAssertTrue(app.navigationBars.buttons["completeDeadline"].isHittable)
+  }
+
   func testRegisterCancelEditCompleteAndPersistHistory() {
     configure()
     app.launch()
@@ -128,13 +148,6 @@ final class JobSearchTests: XCTestCase {
   }
 
   func testSampleNotificationOpensTheDayAndCompletesOneOfTwo() {
-    func capture(_ name: String) {
-      let attachment = XCTAttachment(screenshot: app.screenshot())
-      attachment.name = name
-      attachment.lifetime = .keepAlways
-      add(attachment)
-    }
-
     configure()
     app.launch()
     tap("startExample")
@@ -142,11 +155,14 @@ final class JobSearchTests: XCTestCase {
     tap("addDeadline")
     tap("chooseCompany")
     tap("existing.B社")
+    XCTAssertTrue(control("existing.B社").waitForNonExistence(timeout: 5))
+    XCTAssertEqual(control("companyField").value as? String, "B社")
     tap("chooseTitle")
-    tap("example.エントリーシート提出")
+    let entrySheet = app.buttons["エントリーシート提出"].firstMatch
+    XCTAssertTrue(entrySheet.waitForExistence(timeout: 5), app.debugDescription)
+    entrySheet.tap()
     tap("saveDeadline")
     XCTAssertTrue(control("task.エントリーシート提出").exists)
-    capture("Store-Deadlines")
     tap("previewNotification")
     tap("openNotification")
     XCTAssertTrue(control("dayFilter").exists)
@@ -159,7 +175,6 @@ final class JobSearchTests: XCTestCase {
       XCTAssertLessThanOrEqual(list.frame.maxX, detail.frame.minX)
     }
     XCTAssertTrue(control("completeDeadline").isHittable)
-    capture("Store-Deadline-Detail")
     tap("completeDeadline")
     XCTAssertTrue(control("task.適性検査").exists)
     XCTAssertFalse(control("task.エントリーシート提出").exists)
@@ -236,8 +251,10 @@ final class JobSearchTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["17:00"].exists)
     XCTAssertTrue(control("saveDeadline").waitForNonExistence(timeout: 5))
     try app.performAccessibilityAudit(for: [.hitRegion, .sufficientElementDescription, .trait])
+    let details = app.collectionViews.containing(.staticText, identifier: "締切日").firstMatch
+    XCTAssertTrue(details.exists)
     for text in ["A社", "締切日", "12月5日（土）", "時刻", "17:00", "前夜の通知", "前日 19:00"] {
-      let element = app.staticTexts[text].firstMatch
+      let element = details.staticTexts[text].firstMatch
       XCTAssertGreaterThanOrEqual(try TextContrast.ratio(in: element.screenshot().image), 4.5, text)
     }
     for name in ["editDeadline", "completeDeadline", "addDeadline"] {
@@ -261,7 +278,7 @@ final class JobSearchTests: XCTestCase {
       tap("startExample")
       XCTAssertTrue(app.buttons["入力例を閉じる"].firstMatch.isHittable)
       tap("task.適性検査")
-      let title = app.staticTexts["適性検査"].firstMatch
+      let title = control("deadlineTitle")
       let date = app.staticTexts["12月4日（金）"].firstMatch
       XCTAssertTrue(title.exists && date.exists)
       let complete = control("completeDeadline")
@@ -278,14 +295,8 @@ final class JobSearchTests: XCTestCase {
           XCTAssertGreaterThanOrEqual(
             try TextContrast.minimumOuterThirdContrast(in: heading.screenshot().image), 4.5, "締切")
           let row = control("task.適性検査")
-          if row.frame.maxY > add.frame.minY {
-            let start = row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15))
-            let end = start.withOffset(CGVector(dx: 0, dy: -row.frame.height))
-            start.press(forDuration: 0.08, thenDragTo: end)
-          }
-          let readable = NSPredicate { _, _ in row.frame.maxY <= add.frame.minY + 1 }
-          let aboveButton = XCTNSPredicateExpectation(predicate: readable, object: nil)
-          XCTAssertEqual(XCTWaiter.wait(for: [aboveButton], timeout: 5), .completed)
+          XCTAssertTrue(row.isHittable)
+          XCTAssertLessThanOrEqual(add.frame.maxY, row.frame.minY)
         }
       }
       let heights = [title.frame.height, date.frame.height]

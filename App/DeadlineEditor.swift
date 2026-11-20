@@ -14,7 +14,6 @@ struct DeadlineEditor: View {
   @State private var receipt: Receipt?
   @State private var saveFailed = false
   @FocusState private var focus: Field?
-  @State private var choice: Field?
 
   private enum Field { case company, title }
   private enum Receipt { case off, denied, unavailable }
@@ -51,26 +50,40 @@ struct DeadlineEditor: View {
               .focused($focus, equals: .company).submitLabel(.done).accessibilityIdentifier(
                 "companyField")
             if !store.journal.companies.isEmpty {
-              Button("登録済みの企業から選ぶ") {
-                focus = nil
-                choice = .company
+              Menu {
+                ForEach(store.journal.companies.sorted { $0.name < $1.name }) { employer in
+                  Button(employer.name) {
+                    draft.company = employer.name
+                    focus = nil
+                  }.accessibilityIdentifier("existing." + employer.name)
+                }
+              } label: {
+                Text("登録済みの企業から選ぶ").frame(maxWidth: .infinity, alignment: .leading)
+                  .contentShape(.rect)
               }
               .accessibilityIdentifier("chooseCompany")
             }
           } header: {
-            Label("企業名", image: "BriefcaseBusiness")
+            Label("企業名", systemImage: "briefcase")
           }
           Section {
             TextField("用件を入力", text: $draft.title)
               .focused($focus, equals: .title).submitLabel(.done).accessibilityIdentifier(
                 "titleField")
-            Button("入力例から選ぶ") {
-              focus = nil
-              choice = .title
+            Menu {
+              ForEach(["エントリーシート提出", "面接の日程確認", "適性検査"], id: \.self) { title in
+                Button(title) {
+                  draft.title = title
+                  focus = nil
+                }.accessibilityIdentifier("example." + title)
+              }
+            } label: {
+              Text("入力例から選ぶ").frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
             }
             .accessibilityIdentifier("chooseTitle")
           } header: {
-            Label("用件", image: "FileText")
+            Label("用件", systemImage: "doc.text")
           }
           Section {
             Button {
@@ -84,7 +97,7 @@ struct DeadlineEditor: View {
                   Text(dateBinding.wrappedValue, format: .dateTime.year().month().day())
                 }
               } label: {
-                Label("締切日", image: "CalendarDays")
+                Label("締切日", systemImage: "calendar")
               }
             }
             .accessibilityLabel(choosingDay ? "日付の選択を完了" : "締切日")
@@ -99,7 +112,7 @@ struct DeadlineEditor: View {
             Toggle(
               isOn: Binding(get: { draft.time != nil }, set: { draft.time = $0 ? 17 * 60 : nil })
             ) {
-              Label("時刻を指定", image: "Clock")
+              Label("時刻を指定", systemImage: "clock")
             }.accessibilityIdentifier("timeToggle")
             if draft.time != nil {
               DatePicker("締切時刻", selection: timeBinding, displayedComponents: .hourAndMinute)
@@ -107,33 +120,13 @@ struct DeadlineEditor: View {
             }
           }
           Section {
-            Toggle(isOn: $draft.notify) { Label("前夜の通知", image: "Bell") }
+            Toggle(isOn: $draft.notify) { Label("前夜の通知", systemImage: "bell") }
               .accessibilityIdentifier("reminderToggle")
           } footer: {
             Text("締切の前日 19:00")
           }
         }
         .onSubmit { focus = nil }
-        .navigationDestination(item: $choice) { field in
-          switch field {
-          case .company:
-            List(store.journal.companies.sorted { $0.name < $1.name }) { employer in
-              Button(employer.name) {
-                draft.company = employer.name
-                choice = nil
-              }
-              .accessibilityIdentifier("existing." + employer.name)
-            }.navigationTitle("企業を選択")
-          case .title:
-            List(["エントリーシート提出", "面接の日程確認", "適性検査"], id: \.self) { title in
-              Button(title) {
-                draft.title = title
-                choice = nil
-              }
-              .accessibilityIdentifier("example." + title)
-            }.navigationTitle("用件の入力例")
-          }
-        }
         .navigationTitle(editing == nil ? "締切を追加" : "締切を編集").navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
@@ -206,19 +199,16 @@ struct DeadlineEditor: View {
   }
 
   private func receiptView(_ receipt: Receipt) -> some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 24) {
-        Text("締切を保存しました").font(.largeTitle.bold())
-        InvertedCard {
-          VStack(alignment: .leading, spacing: 8) {
-            Text(draft.company).font(.subheadline)
-            Text(draft.title).font(.headline)
-            Text(JapaneseDate.label(draft.day, time: draft.time))
-          }
-        }
+    List {
+      Section("締切を保存しました") {
+        Label(draft.title, systemImage: "doc.text").font(.headline)
+        Label(draft.company, systemImage: "briefcase")
+        Label(JapaneseDate.label(draft.day, time: draft.time), systemImage: "calendar")
+      }
+      Section {
         switch receipt {
         case .off:
-          Label("前夜の通知はオフです", image: "BellOff")
+          Label("前夜の通知はオフです", systemImage: "bell.slash")
         case .denied:
           Text("端末の設定で通知がオフになっています。")
           Button("通知設定を開く") {
@@ -229,12 +219,12 @@ struct DeadlineEditor: View {
         case .unavailable:
           Text("前夜の通知を予約できませんでした。アプリを開き直すと再試行します。")
         }
-        Text("締切は一覧から確認できます。")
-      }.frame(maxWidth: 680, alignment: .leading).padding()
+      }
     }.navigationTitle("登録完了").navigationBarTitleDisplayMode(.inline)
-      .safeAreaInset(edge: .bottom) {
-        PrimaryAction(title: "締切一覧へ", icon: "ArrowRightLight", action: returnToList)
-          .accessibilityIdentifier("closeReceipt").frame(maxWidth: 680).padding()
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("締切一覧へ", action: returnToList).accessibilityIdentifier("closeReceipt")
+        }
       }
   }
 }

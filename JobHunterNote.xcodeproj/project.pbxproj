@@ -17,6 +17,7 @@
 		5E51D2AD273A33F819A675AB /* ReminderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02E2BD871844C7E2F6BDCE5 /* ReminderTests.swift */; };
 		804079A2DC0A551AA163FD3B /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B26B46C5B8E4B9BC3DE5C6 /* Components.swift */; };
 		884F10F60FF4FD2F6F28ED05 /* JournalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBAE05A1BFFF83ACC005226 /* JournalStore.swift */; };
+		A2D2652E1E13723D3489E78A /* JobJournal in Frameworks */ = {isa = PBXBuildFile; productRef = B5C8BF9CCC50EDB2929F65A2 /* JobJournal */; };
 		A8C6C11D41AF817CC9C85807 /* JournalRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDDA800FBDA625C0904A27BE /* JournalRecoveryTests.swift */; };
 		B163F1FA71050D6B9CF94FB7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BF335DC6C05EC4F5722938F9 /* Assets.xcassets */; };
 		C81D57419A4366FFFFFE4158 /* ReminderReconciliationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2963B5BFD749BC3E986A7A2 /* ReminderReconciliationTests.swift */; };
@@ -26,6 +27,7 @@
 		D2ED60D5AD5E0DEBD03C7633 /* TextContrast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1FBA1EB0A10BBF7511F6CD /* TextContrast.swift */; };
 		E48DD38EE6ABA846659F1896 /* DeadlineViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADDB13723A17CB710ABC09CF /* DeadlineViews.swift */; };
 		E7CF7EB0B93F7987CF6B9610 /* LocalReminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = B45D88E46B00A7D5A58ACAAA /* LocalReminders.swift */; };
+		ED0D9CC59C49DC2B76C62E09 /* StoreCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED1ACF9340067F910B981F48 /* StoreCaptureTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,6 +67,7 @@
 		CDDA800FBDA625C0904A27BE /* JournalRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalRecoveryTests.swift; sourceTree = "<group>"; };
 		D02E2BD871844C7E2F6BDCE5 /* ReminderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderTests.swift; sourceTree = "<group>"; };
 		E2963B5BFD749BC3E986A7A2 /* ReminderReconciliationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderReconciliationTests.swift; sourceTree = "<group>"; };
+		ED1ACF9340067F910B981F48 /* StoreCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreCaptureTests.swift; sourceTree = "<group>"; };
 		FCBAE05A1BFFF83ACC005226 /* JournalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalStore.swift; sourceTree = "<group>"; };
 		FF46A17425880939E2FB72A5 /* JobHunterNote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = JobHunterNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FF709533A0D835E80378444C /* AppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -76,6 +79,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC073E78A90D13F5E68ED7E0 /* JobJournal in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C9C88A571507E792F001721E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A2D2652E1E13723D3489E78A /* JobJournal in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -113,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				740F6AA888C784E3FFA29B8E /* JobSearchTests.swift */,
+				ED1ACF9340067F910B981F48 /* StoreCaptureTests.swift */,
 				4E1FBA1EB0A10BBF7511F6CD /* TextContrast.swift */,
 			);
 			path = AppUITests;
@@ -214,6 +226,7 @@
 			buildConfigurationList = E5F57265E9A8DF8DABE7FD20 /* Build configuration list for PBXNativeTarget "AppUITests" */;
 			buildPhases = (
 				B68BFE949DEAB82CA5628520 /* Sources */,
+				C9C88A571507E792F001721E /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -222,6 +235,7 @@
 			);
 			name = AppUITests;
 			packageProductDependencies = (
+				B5C8BF9CCC50EDB2929F65A2 /* JobJournal */,
 			);
 			productName = AppUITests;
 			productReference = BBC75EC27C8BBAB174DBADBE /* AppUITests.xctest */;
@@ -310,6 +324,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CD40846D96338F13CC86FE48 /* JobSearchTests.swift in Sources */,
+				ED0D9CC59C49DC2B76C62E09 /* StoreCaptureTests.swift in Sources */,
 				D2ED60D5AD5E0DEBD03C7633 /* TextContrast.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -336,7 +351,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -424,7 +439,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				INFOPLIST_FILE = App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -611,6 +626,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		97FAC78435ABDC853BB01E03 /* JobJournal */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = JobJournal;
+		};
+		B5C8BF9CCC50EDB2929F65A2 /* JobJournal */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = JobJournal;
 		};

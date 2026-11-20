@@ -52,3 +52,5 @@ jobs:
           persist-credentials: false
       - name: Build the release archive
         run: make archive
+      - name: Verify store screenshots and creative artwork
+        run: xcrun swift Scripts/VerifyStoreMedia.swift

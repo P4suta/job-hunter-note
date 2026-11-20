@@ -8,11 +8,12 @@ ARCHIVED_APP = $(ARCHIVE_PATH)/Products/Applications/JobHunterNote.app
 ASC = mise x github:rorkai/App-Store-Connect-CLI@6.6.1 -- asc
 SCREENSHOTS_DIR ?= store/screenshots/ja
 
-.PHONY: check lint unit simulator tsan mutation archive metadata
+.PHONY: check lint unit simulator tsan mutation archive metadata store-capture
 check: lint unit simulator
 
 lint:
-	xcrun swift-format lint --strict --recursive App Sources Tests AppTests AppUITests Package.swift
+	xcrun swift-format lint --strict --recursive App Sources Tests AppTests AppUITests Scripts Package.swift
+	xcrun swift Scripts/VerifySystemControls.swift
 	plutil -lint App/Info.plist App/PrivacyInfo.xcprivacy
 
 unit:
@@ -37,6 +38,9 @@ mutation:
 simulator:
 	xcodebuild -quiet -jobs 4 -project "$(PROJECT)" -scheme "$(SCHEME)" -destination "$(DESTINATION)" -derivedDataPath "$(DERIVED_DATA)" -parallel-testing-enabled NO test
 
+store-capture:
+	DERIVED_DATA="$(DERIVED_DATA)" SCREENSHOTS_DIR="$(SCREENSHOTS_DIR)" bash Scripts/capture-store.sh "$(DEVICE)" "$(PROFILE)"
+
 archive:
 	xcodebuild -quiet -jobs 4 -project "$(PROJECT)" -scheme "$(SCHEME)" -configuration Release \
 		-destination 'generic/platform=iOS' -archivePath "$(ARCHIVE_PATH)" -derivedDataPath "$(DERIVED_DATA)" \
@@ -48,6 +52,7 @@ archive:
 	$(if $(DEVELOPMENT_TEAM),codesign --verify --strict "$(ARCHIVED_APP)")
 
 metadata:
+	xcrun swift Scripts/VerifyStoreMedia.swift --screenshots-dir "$(SCREENSHOTS_DIR)"
 	$(ASC) metadata validate --dir store/metadata
 	$(ASC) screenshots validate --path "$(SCREENSHOTS_DIR)/iphone" --device-type IPHONE_61
 	$(ASC) screenshots validate --path "$(SCREENSHOTS_DIR)/iphone-large" --device-type IPHONE_69

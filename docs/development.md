@@ -22,6 +22,14 @@ Run `make mutation` with mise installed to check whether the journal tests detec
 The mutation check copies the Swift package to a temporary directory and runs one worker.
 Keep package tests in named Swift Testing suites so the mutation runner can select the tests for each change.
 
+## Use native journal controls
+
+Use SwiftUI navigation toolbars, menus, grouped lists, and SF Symbols for the journal.
+Keep the system label color as the monochrome accent in both appearances.
+The system supplies Liquid Glass for navigation on supported releases and adapts the layout to the available window size.
+The [design decision](adr/use-system-controls-for-journal-actions.md) explains the placement of journal actions.
+Apple describes the separation of controls and content in its [materials guidance](https://developer.apple.com/design/human-interface-guidelines/materials).
+
 ## Reminders
 
 Enable the reminder when saving a deadline and grant notification access when iOS asks.

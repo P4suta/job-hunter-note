@@ -7,29 +7,31 @@ struct EmployerList: View {
   let add: () -> Void
   var body: some View {
     List(selection: $selection) {
-      Text("登録済み \(journal.companies.count)社").font(.subheadline)
-      if journal.companies.isEmpty {
-        Text("登録した応募先はまだありません。").padding(.vertical)
-      }
-      ForEach(
-        journal.companies.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-      ) { company in
-        NavigationLink(value: company.id) {
-          HStack(alignment: .top, spacing: 12) {
-            DesignIcon("BriefcaseBusiness")
-            VStack(alignment: .leading, spacing: 4) {
-              Text(company.name).font(.headline)
-              Text(company.stage.label).font(.subheadline)
+      Section("登録済み \(journal.companies.count)社") {
+        if journal.companies.isEmpty { Text("登録した応募先はまだありません。") }
+        ForEach(
+          journal.companies.sorted {
+            $0.name.localizedStandardCompare($1.name) == .orderedAscending
+          }
+        ) { company in
+          NavigationLink(value: company.id) {
+            Label {
+              VStack(alignment: .leading, spacing: 4) {
+                Text(company.name).font(.headline)
+                Text(company.stage.label).font(.subheadline)
+              }
+            } icon: {
+              Image(systemName: "briefcase")
             }
-          }.padding(.vertical, 4)
-        }.accessibilityIdentifier("employer." + company.name)
+          }.accessibilityIdentifier("employer." + company.name)
+        }
       }
-      Section {
+      Section("サポート情報") {
         Link("サポート", destination: URL(string: "https://job-hunter-note.yasunobu.dev/support/")!)
         Link(
           "プライバシーポリシー", destination: URL(string: "https://job-hunter-note.yasunobu.dev/privacy/")!)
       }
-    }.listStyle(.plain).navigationTitle("応募先")
+    }.listStyle(.insetGrouped).navigationTitle("応募先")
       .toolbar {
         Button(action: add) { Label("応募先を追加", systemImage: "plus") }
           .accessibilityIdentifier("addEmployer")
@@ -42,37 +44,39 @@ struct EmployerDetail: View {
   let history: [Deadline]
   let changeStage: () -> Void
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 20) {
-        Text(employer.name).font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
+    List {
+      Section {
         Button(action: changeStage) {
-          InvertedCard {
-            HStack {
-              VStack(alignment: .leading, spacing: 6) {
-                Text("選考段階").font(.subheadline)
-                Text(employer.stage.label).font(.title2.bold())
-              }
-              Spacer()
-              DesignIcon("ArrowRightLight")
-            }
+          LabeledContent {
+            Text(employer.stage.label).foregroundStyle(Color(uiColor: .label))
+          } label: {
+            Label("選考段階", systemImage: "list.bullet")
           }
-        }.buttonStyle(.plain).accessibilityLabel("選考段階、" + employer.stage.label)
-          .accessibilityIdentifier("changeStage")
-        Text("提出履歴").font(.title2.bold()).accessibilityAddTraits(.isHeader)
-        Divider()
+        }
+        .accessibilityLabel("選考段階、" + employer.stage.label)
+        .accessibilityIdentifier("changeStage")
+      } header: {
+        Text(employer.name).font(.largeTitle.bold()).foregroundStyle(Color(uiColor: .label))
+          .textCase(nil)
+      }
+      Section("提出履歴") {
         if history.isEmpty { Text("提出履歴はまだありません。") }
         ForEach(history) { item in
           if let date = item.completedAt {
-            DetailValue(
-              label: JapaneseDate.label(Day(date, calendar: .current)) + " 提出", value: item.title
-            )
+            Label {
+              VStack(alignment: .leading, spacing: 4) {
+                Text(item.title).font(.headline)
+                Text(JapaneseDate.label(Day(date, calendar: .current)) + " 提出").font(.subheadline)
+              }
+            } icon: {
+              Image(systemName: "checkmark.circle")
+            }
             .accessibilityElement(children: .combine).accessibilityIdentifier(
               "history." + item.title)
-            Divider()
           }
         }
-      }.padding().frame(maxWidth: 680, alignment: .leading).frame(maxWidth: .infinity)
-    }.navigationTitle("応募先の詳細").navigationBarTitleDisplayMode(.inline)
+      }
+    }.listStyle(.insetGrouped).navigationTitle("応募先の詳細").navigationBarTitleDisplayMode(.inline)
   }
 }
 
@@ -132,7 +136,7 @@ struct StageEditor: View {
         }.accessibilityIdentifier("stage." + stage.rawValue)
           .accessibilityAddTraits(store.journal.company(id)?.stage == stage ? .isSelected : [])
       }.navigationTitle("選考段階を変更").navigationBarTitleDisplayMode(.inline)
-        .toolbar { Button("キャンセル") { dismiss() } }
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("キャンセル") { dismiss() } } }
         .alert("選考段階を保存できませんでした", isPresented: $saveFailed) { Button("閉じる") {} }
     }.presentationDetents([.medium, .large])
   }
