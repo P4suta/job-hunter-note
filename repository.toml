@@ -1,0 +1,6 @@
+name = "Job search deadlines"
+summary = "Track job applications, deadlines, and submission history on iPhone and iPad"
+install = "git clone https://github.com/P4suta/job-hunter-note.git\ncd job-hunter-note"
+usage = "open JobHunterNote.xcodeproj"
+copyright = "Yasunobu"
+license = "MIT OR Apache-2.0"

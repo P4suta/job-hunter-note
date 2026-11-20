@@ -1,0 +1,60 @@
+name: JobHunterNote
+options:
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: ja
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    TARGETED_DEVICE_FAMILY: "1,2"
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+packages:
+  JobJournal:
+    path: .
+targets:
+  JobHunterNote:
+    type: application
+    platform: iOS
+    sources: [App]
+    dependencies:
+      - package: JobJournal
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.miraisagashi.jobnote
+        INFOPLIST_FILE: App/Info.plist
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SUPPORTS_MACCATALYST: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+  AppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [AppTests]
+    dependencies:
+      - target: JobHunterNote
+      - package: JobJournal
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.miraisagashi.jobnote.tests
+        GENERATE_INFOPLIST_FILE: YES
+  AppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [AppUITests]
+    dependencies:
+      - target: JobHunterNote
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.miraisagashi.jobnote.uitests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  JobHunterNote:
+    build:
+      targets:
+        JobHunterNote: all
+    test:
+      gatherCoverageData: false
+      targets: [AppTests, AppUITests]
