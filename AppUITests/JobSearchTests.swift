@@ -15,6 +15,12 @@ final class JobSearchTests: XCTestCase {
     app.descendants(matching: .any).matching(identifier: name).firstMatch
   }
 
+  private func selectTab(_ title: String) {
+    let tab = app.buttons.matching(NSPredicate(format: "label == %@", title)).firstMatch
+    XCTAssertTrue(tab.waitForExistence(timeout: 5), title)
+    tab.tap()
+  }
+
   func tap(_ name: String) {
     let element = control(name)
     if !element.waitForExistence(timeout: 2) || !element.isHittable {
@@ -96,14 +102,14 @@ final class JobSearchTests: XCTestCase {
     tap("task.Interview")
     tap("completeDeadline")
     XCTAssertFalse(control("task.Interview").exists)
-    tap("tabEmployers")
+    selectTab("応募先")
     tap("employer.ACME")
     XCTAssertTrue(control("history.Interview").exists)
     tap("changeStage")
     tap("stage.waiting")
     app.terminate()
     app.launch()
-    tap("tabEmployers")
+    selectTab("応募先")
     tap("employer.ACME")
     XCTAssertTrue(control("history.Interview").exists)
     XCTAssertTrue(control("changeStage").label.contains("結果待ち"))
@@ -112,7 +118,7 @@ final class JobSearchTests: XCTestCase {
   func testSupportAndPrivacyAreAvailableBeforeAddingAnEmployer() {
     configure()
     app.launch()
-    tap("tabEmployers")
+    selectTab("応募先")
     for title in ["サポート", "プライバシーポリシー"] {
       let link = app.links[title].firstMatch
       let action = link.exists ? link : app.buttons[title].firstMatch
@@ -188,7 +194,7 @@ final class JobSearchTests: XCTestCase {
     XCUIDevice.shared.orientation = .portrait
     defer { XCUIDevice.shared.orientation = .portrait }
     app.launch()
-    tap("tabEmployers")
+    selectTab("応募先")
     tap("addEmployer")
     type("Long Company Name Research and Design", into: "employerName")
     tap("saveEmployer")
@@ -197,7 +203,7 @@ final class JobSearchTests: XCTestCase {
     XCUIDevice.shared.orientation = .landscapeLeft
     XCTAssertTrue(control("changeStage").waitForExistence(timeout: 5))
     XCUIDevice.shared.orientation = .portrait
-    tap("tabDeadlines")
+    selectTab("締切")
     tap("addDeadline")
     type("Draft", into: "titleField")
     XCUIDevice.shared.orientation = .landscapeLeft
