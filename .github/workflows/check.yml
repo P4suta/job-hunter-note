@@ -54,5 +54,5 @@ jobs:
         run: make archive
       - name: Verify store screenshots and creative artwork
         run: |
-          brew install tesseract-lang
+          brew install tesseract-lang imagemagick
           make store-media

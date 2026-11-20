@@ -6,19 +6,31 @@ work=$(mktemp -d)
 trap 'rm -rf "${work}"' EXIT
 
 reject() {
-	local fixture=$1 diagnostic=$2
-	if xcrun swift Scripts/VerifyStoreMedia.swift "${fixture}" >"${work}/result" 2>&1; then
+	local fixture=$1 diagnostic=$2 result
+	if result=$(xcrun swift Scripts/VerifyStoreMedia.swift "${fixture}" 2>&1); then
 		echo "Invalid screenshot passed: ${fixture}" >&2
 		return 1
 	fi
-	if ! grep -Fq "${diagnostic}" "${work}/result"; then
-		cat "${work}/result" >&2
+	if [[ ${result} != *"${diagnostic}"* ]]; then
+		printf '%s\n' "${result}" >&2
 		return 1
 	fi
 }
 
-sips --rotate 180 "${original}" --out "${work}/inverted.png" >/dev/null
+magick "${original}" -rotate 180 "PNG24:${work}/inverted.png"
 reject "${work}/inverted.png" 'missing upright'
-sips --padToHeightWidth 2064 3600 --padColor 000000 "${original}" --out "${work}/padded.png" >/dev/null
-reject "${work}/padded.png" 'black display edge'
-echo 'Rejected upside-down text and black display edges.'
+
+dimensions=$(magick identify -format '%w %h' "${original}")
+read -r width height <<<"${dimensions}"
+
+check_edge() {
+	local edge=$1 rectangle=$2
+	magick "${original}" -fill black -stroke none -draw "rectangle ${rectangle}" "PNG24:${work}/${edge}.png"
+	reject "${work}/${edge}.png" 'black display edge'
+}
+
+check_edge top "0,0 $((width - 1)),7"
+check_edge bottom "0,$((height - 8)) $((width - 1)),$((height - 1))"
+check_edge left "0,0 7,$((height - 1))"
+check_edge right "$((width - 8)),0 $((width - 1)),$((height - 1))"
+echo 'Rejected upside-down text and an eight-pixel black band on each display edge.'

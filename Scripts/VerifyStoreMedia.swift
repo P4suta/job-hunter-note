@@ -32,8 +32,21 @@ struct StoreImage {
   }
 
   func hasBlackDisplayEdge() -> Bool {
-    let width = 100
-    let height = 60
+    let width = image.width
+    let height = image.height
+    let middleX = (width / 10)..<(width - width / 10)
+    let middleY = (height / 10)..<(height - height / 10)
+    func hasBand(along length: Int, isDark: (Int) -> Bool) -> Bool {
+      let depth = min(length, max(8, length / 10))
+      for edge in [0..<depth, (length - depth)..<length] {
+        var thickness = 0
+        for line in edge {
+          thickness = isDark(line) ? thickness + 1 : 0
+          if thickness == 8 { return true }
+        }
+      }
+      return false
+    }
     var samples = [UInt8](repeating: 0, count: width * height)
     return samples.withUnsafeMutableBytes { bytes -> Bool in
       let context = CGContext(
@@ -41,9 +54,13 @@ struct StoreImage {
         bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: 0)!
       context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
       let pixels = bytes.bindMemory(to: UInt8.self)
-      return [2..<10, 90..<98].contains { columns in
-        columns.allSatisfy { x in (6..<54).allSatisfy { y in pixels[y * width + x] < 20 } }
+      let vertical = hasBand(along: width) { x in
+        middleY.allSatisfy { y in pixels[y * width + x] < 20 }
       }
+      return vertical
+        || hasBand(along: height) { y in
+          middleX.allSatisfy { x in pixels[y * width + x] < 20 }
+        }
     }
   }
 
