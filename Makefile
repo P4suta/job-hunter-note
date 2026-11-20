@@ -5,6 +5,8 @@ SCHEME = JobHunterNote
 PROJECT = JobHunterNote.xcodeproj
 ARCHIVE_PATH ?= .build-output/JobHunterNote.xcarchive
 ARCHIVED_APP = $(ARCHIVE_PATH)/Products/Applications/JobHunterNote.app
+ASC = mise x github:rorkai/App-Store-Connect-CLI@6.6.1 -- asc
+SCREENSHOTS_DIR ?= store/screenshots/ja
 
 .PHONY: check lint unit simulator tsan mutation archive metadata
 check: lint unit simulator
@@ -46,4 +48,8 @@ archive:
 	$(if $(DEVELOPMENT_TEAM),codesign --verify --strict "$(ARCHIVED_APP)")
 
 metadata:
-	mise x github:rorkai/App-Store-Connect-CLI@6.6.1 -- asc metadata validate --dir store/metadata
+	$(ASC) metadata validate --dir store/metadata
+	$(ASC) screenshots validate --path "$(SCREENSHOTS_DIR)/iphone" --device-type IPHONE_61
+	$(ASC) screenshots validate --path "$(SCREENSHOTS_DIR)/iphone-large" --device-type IPHONE_69
+	$(ASC) screenshots validate --path "$(SCREENSHOTS_DIR)/iphone-duo" --device-type IPHONE_DUO
+	$(ASC) screenshots validate --path "$(SCREENSHOTS_DIR)/ipad" --device-type IPAD_PRO_3GEN_129

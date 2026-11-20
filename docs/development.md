@@ -15,7 +15,7 @@ Choose `入力例で試す` on the empty `締切` tab to try the December 4 exam
 Run `make lint unit` to check Swift formatting, app metadata, and the journal rules.
 Run `xcrun simctl list devices available` to find the identifier of an installed simulator.
 Replace `SIMULATOR_ID` in `make check DESTINATION='id=SIMULATOR_ID'` to run the full suite on that device.
-To check an iPhone Duo fold in Device Hub, edit the title of a sample deadline and switch between `Closed`, `Partially Open`, and `Open`.
+To check an iPhone Duo fold, use the [hinge CLI](https://github.com/artemnovichkov/hinge/tree/v0.3.1) to move the simulated hinge through 0, 90, and 180 degrees while editing the title of a sample deadline.
 Check that the unsaved title survives each change and that `キャンセル` restores the saved title.
 Run `make tsan` to check concurrent reads and writes with Thread Sanitizer.
 Run `make mutation` with mise installed to check whether the journal tests detect changes to production logic.

@@ -6,7 +6,7 @@ The app supports iPhone and iPad and uses Japanese as its primary language.
 ## Product information
 
 The [app information](metadata/app-info/ja.json) and [version information](metadata/version/1.0/ja.json) use the App Store Connect CLI metadata format.
-Run `make metadata` to validate the fields and character limits offline.
+Run `make metadata` to check the product fields, character limits, and screenshot files for each display size.
 Once the support site is live, run the URL check from the repository root.
 
 ```sh
@@ -20,12 +20,13 @@ Website visitors can contact the developer through [support](https://job-hunter-
 
 ## Screenshots
 
-The [Japanese screenshots](screenshots/ja/) show the sample list and a selected deadline.
-The iPhone images measure 1206 × 2622 pixels.
+The [Japanese screenshots](screenshots/ja/) show the deadline list, deadline details, and employer selection.
+The iPhone 18 Pro images measure 1206 × 2622 pixels and the iPhone 18 Pro Max images measure 1320 × 2868 pixels.
+The iPhone Duo images show the list and details on the 1398 × 2034 outer display and employer selection on the 2853 × 2007 inner display.
 The 13-inch iPad images measure 2064 × 2752 pixels in portrait and 2752 × 2064 pixels in landscape.
 Apple lists the accepted sizes in its [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/).
 
-To capture the images again, run the sample notification test on an iPhone 18 Pro and a 13-inch iPad Pro simulator.
+To capture the images again, run the sample notification test on each simulator.
 Use a fresh result bundle path for each run.
 The test attaches an image of each screen to the result bundle.
 
@@ -36,6 +37,17 @@ xcodebuild -project JobHunterNote.xcodeproj -scheme JobHunterNote \
   -resultBundlePath "$RESULT_BUNDLE" test
 xcrun xcresulttool export attachments --path "$RESULT_BUNDLE" \
   --filter 'Store*.png' --output-path "$SCREENSHOT_DIRECTORY"
+```
+
+For the iPhone Duo inner display, use [hinge](https://github.com/artemnovichkov/hinge/tree/v0.3.1) to unfold the simulator once the sample app is running.
+Read the active display identifier, then capture the full display while the employer choices are visible.
+Use ImageMagick to remove the alpha channel from the opaque capture.
+
+```sh
+hinge --device "$SIMULATOR_ID" set 180
+xcrun devicectl device info displays --device "$SIMULATOR_ID"
+xcrun simctl io "$SIMULATOR_ID" screenshot --display="$DISPLAY_ID" "$SCREENSHOT_DIRECTORY/inner.png"
+magick "$SCREENSHOT_DIRECTORY/inner.png" -alpha off "PNG24:$SCREENSHOT_DIRECTORY/inner-employer-selection.png"
 ```
 
 ## Archive
