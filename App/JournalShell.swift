@@ -24,7 +24,7 @@ struct JournalShell: View {
   var router: NotificationRouter?
   var closeExample: (() -> Void)?
   @Environment(\.scenePhase) private var phase
-  @Environment(\.dynamicTypeSize) private var textSize
+  @Environment(\.horizontalSizeClass) private var width
   @State private var tab = JournalTab.deadlines
   @State private var taskID: UUID?
   @State private var employerID: UUID?
@@ -48,7 +48,7 @@ struct JournalShell: View {
           Button("読み込み直す") { store.reload() }
         }
       } else {
-        tabs
+        tabs.accessibilityHidden(example != nil)
       }
     }
     .onChange(of: phase, initial: true) { _, phase in
@@ -100,9 +100,9 @@ struct JournalShell: View {
 
   private var tabs: some View {
     TabView(selection: $tab) {
-      Tab("締切", image: "CalendarDays", value: JournalTab.deadlines) { deadlineSplit }
+      Tab("締切", systemImage: "calendar", value: JournalTab.deadlines) { deadlineSplit }
         .accessibilityIdentifier("tabDeadlines")
-      Tab("応募先", image: "BriefcaseBusiness", value: JournalTab.employers) { employerSplit }
+      Tab("応募先", systemImage: "briefcase", value: JournalTab.employers) { employerSplit }
         .accessibilityIdentifier("tabEmployers")
     }.tabViewStyle(.tabBarOnly)
   }
@@ -114,13 +114,17 @@ struct JournalShell: View {
       selectedDeadline
     }
     .navigationSplitViewStyle(.balanced)
+    .onChange(of: width, initial: true) { _, width in
+      if width == .regular, taskID == nil { taskID = store.journal.open(on: filter).first?.id }
+    }
   }
 
   private var deadlineList: DeadlineList {
     let offer: (() -> Void)? = closeExample == nil ? { startExample() } : nil
     return DeadlineList(
       journal: store.journal, today: today, filter: filter, selection: $taskID,
-      add: { sheet = .deadline(nil) }, clearFilter: { filter = nil }, example: offer)
+      add: { sheet = .deadline(nil) }, edit: { sheet = .deadline($0) },
+      complete: complete, clearFilter: { filter = nil }, example: offer)
   }
 
   @ViewBuilder private var selectedDeadline: some View {
@@ -145,7 +149,16 @@ struct JournalShell: View {
       } else {
         ContentUnavailableView("応募先を選択", systemImage: "briefcase")
       }
-    }.navigationSplitViewStyle(.balanced)
+    }
+    .navigationSplitViewStyle(.balanced)
+    .onChange(of: width, initial: true) { _, width in
+      if width == .regular, employerID == nil {
+        employerID =
+          store.journal.companies.min {
+            $0.name.localizedStandardCompare($1.name) == .orderedAscending
+          }?.id
+      }
+    }
   }
 
   @ToolbarContentBuilder private var exampleToolbar: some ToolbarContent {
@@ -162,7 +175,7 @@ struct JournalShell: View {
         Button {
           if let plan { sheet = .notice(plan) }
         } label: {
-          Label("前夜の通知を見る", image: "Bell")
+          Label("前夜の通知を見る", systemImage: "bell")
         }.disabled(plan == nil).accessibilityIdentifier("previewNotification")
       }
     }
@@ -173,11 +186,7 @@ struct JournalShell: View {
       Button {
         closeExample?()
       } label: {
-        if textSize.isAccessibilitySize {
-          Label("入力例を閉じる", systemImage: "xmark").labelStyle(.iconOnly)
-        } else {
-          Text("入力例を閉じる")
-        }
+        Label("入力例を閉じる", systemImage: "xmark")
       }.accessibilityIdentifier("exitExample")
     }
   }
@@ -191,8 +200,10 @@ struct JournalShell: View {
   private func complete(_ id: UUID) {
     do {
       try store.change { try $0.complete(id, at: store.exampleDate ?? Date()) }
-      taskID = nil
-      taskColumn = .sidebar
+      if taskID == id {
+        taskID = nil
+        taskColumn = .sidebar
+      }
     } catch { warning = "記録を保存できませんでした。もう一度お試しください。" }
   }
 

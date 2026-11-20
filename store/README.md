@@ -1,6 +1,6 @@
 # Prepare the store submission
 
-The initial iOS version is 1.0, build 1, with bundle identifier `app.miraisagashi.jobnote`.
+The iOS release candidate is version 1.0, build 2, with bundle identifier `app.miraisagashi.jobnote`.
 The app supports iPhone and iPad and uses Japanese as its primary language.
 
 ## Product information
@@ -18,37 +18,32 @@ Its privacy response is **Data Not Collected**.
 The app includes its privacy manifest and a link to the [privacy policy](https://job-hunter-note.yasunobu.dev/privacy/).
 Website visitors can contact the developer through [support](https://job-hunter-note.yasunobu.dev/support/).
 
-## Screenshots
+## Screenshots and artwork
 
-The [Japanese screenshots](screenshots/ja/) show the deadline list, deadline details, and employer selection.
+The [Japanese screenshots](screenshots/ja/) show real journal records on each simulator display.
 The iPhone 18 Pro images measure 1206 × 2622 pixels and the iPhone 18 Pro Max images measure 1320 × 2868 pixels.
-The iPhone Duo images show the list and details on the 1398 × 2034 outer display and employer selection on the 2853 × 2007 inner display.
-The 13-inch iPad images measure 2064 × 2752 pixels in portrait and 2752 × 2064 pixels in landscape.
-Apple lists the accepted sizes in its [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/).
+The folded iPhone Duo shows the deadline list and detail at 1398 × 2034 pixels.
+The unfolded Duo shows employers and submission history together at 2853 × 2007 pixels.
+The 13-inch iPad shows employer history in portrait at 2064 × 2752 pixels and the selected deadline in landscape at 2752 × 2064 pixels.
+Apple lists the accepted dimensions in its [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/).
 
-To capture the images again, run the sample notification test on each simulator.
-Use a fresh result bundle path for each run.
-The test attaches an image of each screen to the result bundle.
+Build the test runner once and select a booted simulator for each display.
+Use `iphone`, `iphone-large`, `duo-outer`, `duo-inner`, or `ipad` for `PROFILE`.
+Use [hinge](https://github.com/artemnovichkov/hinge/tree/v0.3.1) to fold or unfold the Duo before capturing the corresponding display.
+The test loads a fictional journal into an isolated store and waits for each selected record to appear.
+The capture command reads the full simulator display while the test holds the screen.
 
 ```sh
 xcodebuild -project JobHunterNote.xcodeproj -scheme JobHunterNote \
-  -destination "id=$SIMULATOR_ID" -parallel-testing-enabled NO \
-  -only-testing:AppUITests/JobSearchTests/testSampleNotificationOpensTheDayAndCompletesOneOfTwo \
-  -resultBundlePath "$RESULT_BUNDLE" test
-xcrun xcresulttool export attachments --path "$RESULT_BUNDLE" \
-  --filter 'Store*.png' --output-path "$SCREENSHOT_DIRECTORY"
+  -destination "id=$SIMULATOR_ID" -derivedDataPath .build-output/Xcode build-for-testing
+make store-capture DEVICE="$SIMULATOR_ID" PROFILE=ipad
 ```
 
-For the iPhone Duo inner display, use [hinge](https://github.com/artemnovichkov/hinge/tree/v0.3.1) to unfold the simulator once the sample app is running.
-Read the active display identifier, then capture the full display while the employer choices are visible.
-Use ImageMagick to remove the alpha channel from the opaque capture.
-
-```sh
-hinge --device "$SIMULATOR_ID" set 180
-xcrun devicectl device info displays --device "$SIMULATOR_ID"
-xcrun simctl io "$SIMULATOR_ID" screenshot --display="$DISPLAY_ID" "$SCREENSHOT_DIRECTORY/inner.png"
-magick "$SCREENSHOT_DIRECTORY/inner.png" -alpha off "PNG24:$SCREENSHOT_DIRECTORY/inner-employer-selection.png"
-```
+The [product page header](artwork/ja/product-page-header.png) shows the calendar and the [search result](artwork/ja/search-results.png) highlights submission history.
+Both compositions use the safe areas from Apple's [creative asset templates](https://developer.apple.com/app-store/asset-best-practices/).
+Render the editable [drawing](../Scripts/RenderStoreArtwork.swift) with `xcrun swift Scripts/RenderStoreArtwork.swift`.
+Install Japanese text recognition and image tools with `brew install tesseract-lang imagemagick` for the store media checks.
+Run `make metadata` to check the opaque exports, upright Japanese text, both split-view columns, and screenshot dimensions.
 
 ## Archive
 
@@ -57,7 +52,7 @@ Run `make archive` to build and inspect an unsigned arm64 archive for iOS.
 With an installed signing identity and provisioning profile, supply the team identifier to produce a signed archive.
 
 ```sh
-make archive DEVELOPMENT_TEAM="$APPLE_TEAM_ID" ARCHIVE_PATH=.build-output/AppStore/JobHunterNote-1.0-1.xcarchive
+make archive DEVELOPMENT_TEAM="$APPLE_TEAM_ID" ARCHIVE_PATH=.build-output/AppStore/JobHunterNote-1.0-2.xcarchive
 ```
 
 The archive target checks the bundle identifier, privacy manifest, and bundled icon license.

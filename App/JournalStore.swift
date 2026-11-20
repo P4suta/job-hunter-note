@@ -28,6 +28,14 @@ final class JournalStore {
         let id = UUID(uuidString: value)
       {
         folder.append(path: "UITests/" + id.uuidString)
+        let file = JournalFile(url: folder.appending(path: "journal.json"))
+        if !FileManager.default.fileExists(atPath: file.url.path),
+          let fixture = ProcessInfo.processInfo.environment["JOB_NOTE_TEST_JOURNAL"]
+        {
+          do {
+            try file.write(JSONDecoder().decode(Journal.self, from: Data(fixture.utf8)))
+          } catch { preconditionFailure("Invalid UI test journal: \(error)") }
+        }
       }
     #endif
     return JournalStore(file: JournalFile(url: folder.appending(path: "journal.json")))
