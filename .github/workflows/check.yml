@@ -17,15 +17,38 @@ concurrency:
 jobs:
   check:
     name: App checks
-    runs-on: xcode-27
+    runs-on: macos-26
     timeout-minutes: 35
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run journal and iPhone tests
+        run: |
+          simulator=$(xcrun simctl create "Job Hunter Note CI iPhone" com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro com.apple.CoreSimulator.SimRuntime.iOS-26-5)
+          xcrun simctl bootstatus "$simulator" -b
+          make check DESTINATION="id=$simulator"
+      - name: Show simulator test failures
+        if: failure()
+        run: |
+          for result in .build-output/Xcode/Logs/Test/*.xcresult; do
+            if [[ -d "$result" ]]; then
+              xcrun xcresulttool get test-results summary --path "$result" |
+                jq -r '.testFailures[] | "\(.testIdentifierString): \(.failureText)"'
+            fi
+          done
+
+  archive:
+    name: Release archive
+    runs-on: xcode-27
+    timeout-minutes: 15
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Run journal and iPhone tests
-        run: make check DESTINATION='platform=iOS Simulator,name=iPhone 18 Pro,OS=27.2'
       - name: Build the release archive
         run: make archive
